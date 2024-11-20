@@ -44,13 +44,10 @@ class GodotAssetScraper:
     def _parse_stars(self, soup: BeautifulSoup, repo_url: str) -> str:
         """Parse star count from repository page."""
         if 'github' in repo_url:
-            star_elem = soup.select_one('.js-social-count')
+            return soup.select_one('.js-social-count').get('title', "").replace(',', '')
         elif 'gitlab' in repo_url:
-            star_elem = soup.select_one('.star-count')
-        else:
-            return "0"
-            
-        return star_elem.text if star_elem else "0"
+            return soup.select_one('.star-count').text.strip()
+        return "0"
 
     def _clean_repo_url(self, repo_url: str) -> str:
         """Clean repository URL to standard format."""
@@ -99,6 +96,7 @@ class GodotAssetScraper:
                 
             for item in soup.select('.asset-item'):
                 if asset_info := self.scrape_asset(item):
+                    logging.info(f"Scraped: {asset_info.name}")
                     if previous_info := self.asset_dict.get(asset_info.asset_url):
                         if previous_info.godot_version > asset_info.godot_version:
                             continue
